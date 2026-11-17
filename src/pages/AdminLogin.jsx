@@ -67,7 +67,7 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <p className="login-foot">Server credentials · admin / kalpitiya123</p>
+        <p className="login-foot">Admin Only</p>
       </div>
     </div>
   );

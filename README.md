@@ -21,7 +21,7 @@ cd server && npm start                                            # term 2
 npm run dev                                                       # term 3
 ```
 
-Open http://localhost:5173 — the dev server proxies `/api` to `:5000`.
+Open http://localhost:5173 — the dev server proxies `/api` to `:5001`.
 
 **Admin sign-in:** `admin` / `kalpitiya123` (override via `ADMIN_PASSWORD` in
 `server/.env` before seeding).
@@ -48,7 +48,7 @@ Open http://localhost:5173 — the dev server proxies `/api` to `:5000`.
 - `/` Home · `/catalogue` · `/place/:id` · `/map` · `/day-plan` · `/favorites`
 - `/admin` login · `/admin/dashboard` admin CRUD
 
-## API (port 5000)
+## API (port 5001)
 
 - `GET  /api/health`
 - `GET  /api/places` — list active places (query: `q`, `category`, `sort`)

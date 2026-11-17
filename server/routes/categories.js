@@ -5,10 +5,14 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
+function publicView(c) {
+  return { id: c._id, name: c.name, slug: c.slug };
+}
+
 router.get("/", async (req, res) => {
   try {
     const categories = await Category.find({}).sort({ name: 1 }).lean();
-    return res.json(categories);
+    return res.json(categories.map(publicView));
   } catch (err) {
     return res.status(500).json({ message: "Failed to load categories" });
   }
@@ -25,8 +29,9 @@ router.post("/", requireAuth, async (req, res) => {
     if (existing) return res.status(400).json({ message: "Category already exists" });
 
     const category = await Category.create({ name, slug: slugify(name) });
-    return res.status(201).json({ category });
+    return res.status(201).json({ category: publicView(category) });
   } catch (err) {
+    console.error("Create category error:", err.message);
     return res.status(500).json({ message: "Failed to create category" });
   }
 });
@@ -48,8 +53,9 @@ router.put("/:id", requireAuth, async (req, res) => {
     category.slug = slugify(name);
     await category.save();
 
-    return res.json({ category });
+    return res.json({ category: publicView(category) });
   } catch (err) {
+    console.error("Rename category error:", err.message);
     return res.status(500).json({ message: "Failed to rename category" });
   }
 });
@@ -69,6 +75,7 @@ router.delete("/:id", requireAuth, async (req, res) => {
     await category.deleteOne();
     return res.json({ message: "Category deleted" });
   } catch (err) {
+    console.error("Delete category error:", err.message);
     return res.status(500).json({ message: "Failed to delete category" });
   }
 });

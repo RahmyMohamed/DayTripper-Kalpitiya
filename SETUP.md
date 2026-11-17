@@ -73,7 +73,7 @@ Three processes are required. Run each in its own terminal.
 mongod --dbpath ./.mongo-data --port 27017 --bind_ip 127.0.0.1
 ```
 
-**Terminal 2 — API server** (`http://localhost:5000`):
+**Terminal 2 — API server** (`http://localhost:5001`):
 
 ```bash
 cd server
@@ -119,8 +119,8 @@ mkdir -p .mongo-data
 | Service   | Port  | Config (server/.env)             |
 | --------- | ----- | -------------------------------- |
 | MongoDB   | 27017 | `MONGODB_URI`                    |
-| API       | 5000  | `PORT`, `SESSION_SECRET`         |
+| API       | 5001  | `PORT`, `SESSION_SECRET`         |
 | Frontend  | 5173  | `CLIENT_ORIGIN` (CORS for API)   |
 
-The Vite dev server proxies `/api` → `http://localhost:5000`, so the frontend needs
+The Vite dev server proxies `/api` → `http://localhost:5001`, so the frontend needs
 no extra configuration in development.

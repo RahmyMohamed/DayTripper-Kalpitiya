@@ -1,11 +1,18 @@
 import { Router } from "express";
 import Place from "../models/Place.js";
+import Category from "../models/Category.js";
 import { requireAuth } from "../middleware/auth.js";
 import { DEFAULT_CATEGORIES } from "../models/categoriesData.js";
 
 const router = Router();
 
 const VALID = new Set(DEFAULT_CATEGORIES);
+
+async function isValidCategory(name) {
+  if (VALID.has(name)) return true;
+  const found = await Category.findOne({ name }).lean();
+  return Boolean(found);
+}
 
 function publicView(p) {
   return {
@@ -110,7 +117,7 @@ router.get("/admin/all", requireAuth, async (req, res) => {
 router.post("/", requireAuth, async (req, res) => {
   try {
     const cleaned = clean(req.body);
-    const errors = validate(cleaned);
+    const errors = await validate(cleaned);
     if (errors.length) return res.status(400).json({ errors });
     const place = await Place.create(cleaned);
     return res.status(201).json({ place: adminView(place) });
@@ -124,7 +131,7 @@ router.post("/", requireAuth, async (req, res) => {
 router.put("/:id", requireAuth, async (req, res) => {
   try {
     const cleaned = clean(req.body);
-    const errors = validate(cleaned);
+    const errors = await validate(cleaned);
     if (errors.length) return res.status(400).json({ errors });
     const place = await Place.findByIdAndUpdate(req.params.id, cleaned, {
       new: true,
@@ -141,7 +148,7 @@ router.put("/:id", requireAuth, async (req, res) => {
 router.patch("/:id", requireAuth, async (req, res) => {
   try {
     const partial = clean(req.body, true);
-    const errors = validate(partial, true);
+    const errors = await validate(partial, true);
     if (errors.length) return res.status(400).json({ errors });
 
     const place = await Place.findById(req.params.id);
@@ -208,7 +215,7 @@ router.post("/bulk-update", requireAuth, async (req, res) => {
     const invalid = [];
     for (const id of ids) {
       try {
-        const errors = validate(safePatch, true);
+        const errors = await validate(safePatch, true);
         if (errors.length) {
           invalid.push({ id, errors });
           continue;
@@ -261,7 +268,7 @@ function clean(body, partial = false) {
   return out;
 }
 
-function validate(cleaned, partial = false) {
+async function validate(cleaned, partial = false) {
   const errors = [];
   const required = partial
     ? []
@@ -290,7 +297,7 @@ function validate(cleaned, partial = false) {
     if (!Number.isInteger(v) || v < 10 || v > 480)
       errors.push("Visit duration must be an integer between 10 and 480 minutes");
   }
-  if (cleaned.category && cleaned.category !== "" && !VALID.has(cleaned.category)) {
+  if (cleaned.category && cleaned.category !== "" && !(await isValidCategory(cleaned.category))) {
     errors.push("Invalid category");
   }
   if (
