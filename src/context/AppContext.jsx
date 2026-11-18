@@ -7,6 +7,7 @@ import {
 } from "react";
 import { api } from "../api/client.js";
 import { enrichPlaces, CATEGORIES } from "../data/places";
+import { travelMinutes, recommendedOrder as sortByDistance } from "../lib/itinerary";
 
 const STORE_ITINERARY = "daytripper.itinerary";
 const STORE_FAVORITES = "daytripper.favorites";
@@ -152,22 +153,9 @@ export function AppProvider({ children }) {
     return added;
   };
 
-  const recommendedOrder = (ids) => {
-    const sorted = [...ids].sort((a, b) => {
-      const pa = byId(a);
-      const pb = byId(b);
-      return (pa?.distanceKm || 0) - (pb?.distanceKm || 0);
-    });
-    return sorted;
-  };
+  const recommendedOrder = (ids) => sortByDistance(ids, byId);
 
-  const travelMinutes = (fromKm, toKm) => {
-    const avgKmPerMin = 0.5;
-    return Math.max(
-      10,
-      Math.round(Math.abs((toKm || 0) - (fromKm || 0)) / avgKmPerMin)
-    );
-  };
+  const travelMinutesFn = (fromKm, toKm) => travelMinutes(fromKm, toKm);
 
   const applyRecommendedOrder = () => {
     setItinerary((prev) => {
@@ -296,7 +284,7 @@ export function AppProvider({ children }) {
       addAllFavorites,
       recommendedOrder,
       applyRecommendedOrder,
-      travelMinutes,
+      travelMinutes: travelMinutesFn,
       isAdmin,
       login,
       logout,

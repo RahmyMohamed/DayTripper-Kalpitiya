@@ -1,15 +1,12 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
-
-function minutesLabel(m) {
-  if (m <= 0) return "";
-  const h = Math.floor(m / 60);
-  const mm = m % 60;
-  if (h === 0) return `${mm} min`;
-  if (mm === 0) return `${h} h`;
-  return `${h} h ${mm} min`;
-}
+import {
+  buildSchedule,
+  fmtTime,
+  minutesLabel,
+  totalDuration,
+} from "../lib/itinerary";
 
 export default function DayPlan() {
   const {
@@ -36,36 +33,15 @@ export default function DayPlan() {
     [itinerary, places]
   );
 
-  const schedule = useMemo(() => {
-    let running = parseInt(startTime.split(":")[0]) * 60 + parseInt(startTime.split(":")[1]);
-    return items.map((it, i) => {
-      const prev = i > 0 ? items[i - 1].place : null;
-      const travel = prev
-        ? travelMinutes(prev.distanceKm, it.place.distanceKm)
-        : 0;
-      if (i > 0) running += travel;
-      const start = running;
-      const end = start + it.durationMin;
-      running = end;
-      return { ...it, travel, start, end };
-    });
-  }, [items, startTime, travelMinutes]);
+  const schedule = useMemo(
+    () => buildSchedule(items, startTime, travelMinutes),
+    [items, startTime, travelMinutes]
+  );
 
-  const total = useMemo(() => {
-    if (schedule.length === 0) return 0;
-    const start = schedule[0].start;
-    const end = schedule[schedule.length - 1].end;
-    return end - start;
-  }, [schedule]);
+  const total = useMemo(() => totalDuration(schedule), [schedule]);
 
   const recommend = () => {
     applyRecommendedOrder();
-  };
-
-  const fmt = (mins) => {
-    const h = Math.floor((mins / 60) % 24);
-    const m = Math.floor(mins % 60);
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   };
 
   const printable = () => {
@@ -173,8 +149,8 @@ export default function DayPlan() {
                   {it.travel > 0 ? `~${it.travel} min` : "—"}
                   <span className="est-note">est.</span>
                 </span>
-                <span>{fmt(it.start)}</span>
-                <span>{fmt(it.end)}</span>
+                <span>{fmtTime(it.start)}</span>
+                <span>{fmtTime(it.end)}</span>
                 <span className="reorder">
                   <button
                     onClick={() => moveItem(i, -1)}
